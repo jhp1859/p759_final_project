@@ -1,0 +1,7 @@
+# Keep this repo focused on the shareable benchmark notebooks.
+*
+!.gitignore
+!Fair_Subspace_Benchmark.ipynb
+!Fair_Subspace_Benchmark_H4.ipynb
+!Fair_Subspace_Benchmark_LiH.ipynb
+!Resource_Estimation_Subspace.ipynb
