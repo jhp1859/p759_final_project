@@ -1,0 +1,54 @@
+\section{Limitations and Future Work}
+
+\subsection{Current Limitations}
+
+The main limitation of the present benchmark is that the working subspace is
+not the full FCI space for the entire system ladder. Instead, the Hamiltonian,
+reference energy, and benchmark basis states are all defined in a
+TrimCI-selected determinant space. Although Appendix~\ref{subsec:trimci-validation}
+shows that this reduced space reproduces the exact FCI result very well on the
+small calibration systems, the larger-system conclusions in this report should
+still be interpreted as reduced-space results rather than exact full-space
+statements.
+
+A second limitation is that the resource comparison is not yet fully symmetric
+between the two basis families. In the current implementation, Krylov basis
+states are generated from Trotterized Hamiltonian evolution, whereas the UCCSD
+side is represented by selected single-generator states ranked by MP2 or CCSD
+amplitudes. This is a meaningful practical comparison, but it does not exhaust
+all possible hardware-aware variants of either family. In particular, a
+truncated or selected Krylov construction could make the resource comparison
+more balanced against selected UCCSD.
+
+\subsection{Future Work}
+
+One natural extension is to make the hardware-level benchmark more symmetric.
+This includes repeating the resource analysis with truncated-Hamiltonian Krylov
+constructions and comparing those results directly against warm-start and
+selected-UCCSD variants. Such a study would clarify whether lower-cost Krylov
+states can preserve enough of the expressivity advantage seen in the present
+benchmark. A closely related direction is to investigate whether qubitization-
+based implementations of Krylov time evolution can reduce the resource cost of
+the Krylov basis relative to the current Trotterized construction.
+
+A second direction is to expand the choice of reference state beyond
+Hartree-Fock. For example, both Krylov and UCCSD could be initialized from a
+stronger warm-start state such as the TrimCI reduced-space ground state rather
+than the Hartree-Fock determinant. That would help separate the effect of basis
+generation from the effect of the initial reference itself.
+
+It would also be valuable to connect the present resource estimates more
+directly to concrete hardware specifications. Mapping the benchmark circuits to
+specific platform assumptions, such as superconducting or trapped-ion devices,
+would make it possible to assess which basis family is closer to realistic
+implementation on a given hardware stack.
+
+Finally, the present comparison suggests several algorithmic extensions. One
+possibility is to design a new hybrid basis family that combines the compact
+expressivity of Krylov with the shallower state-preparation structure of
+selected UCCSD. Another is to investigate related subspace constructions and
+variations of UCC/Krylov ideas, for example Q-SENSE
+\cite{patel2025qsense}. A complementary theoretical direction is to study more
+carefully why Krylov bases so effectively describe the ground state in these
+electronic-structure problems, and whether that behavior can be predicted from
+spectral or correlation properties of the Hamiltonian.

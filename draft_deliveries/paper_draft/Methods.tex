@@ -1,0 +1,153 @@
+\section{Methods / Model Assumptions}
+
+\subsection{Quantum Basis}
+
+This paper compares two structured basis-generation strategies for molecular ground-state estimation in a projected subspace framework: Krylov basis states and UCCSD basis states. Both start from the same Hartree-Fock reference state, but they differ in how they generate additional directions in Hilbert space and in what parameters define those directions.
+
+\subsubsection{Krylov Basis}
+
+Krylov methods construct a basis from repeated Hamiltonian action on a reference state and are naturally suited to projected eigensolvers \cite{cortes2022qksd}. Formally, the Krylov subspace of order $K$ generated from $\ket{\phi_{\mathrm{HF}}}$ is
+\begin{equation}
+\mathcal{K}_K(\hat{H}, \ket{\phi_{\mathrm{HF}}}) =
+\mathrm{span}\{\ket{\phi_{\mathrm{HF}}}, \hat{H}\ket{\phi_{\mathrm{HF}}}, \hat{H}^2\ket{\phi_{\mathrm{HF}}}, \ldots \}.
+\end{equation}
+In the circuit-based implementation used here, a time-evolved version is more convenient, and each additional Krylov basis state is generated from the Hartree-Fock reference using Trotterized real-time evolution,
+\begin{equation}
+\ket{\phi(t_k)} \approx e^{-it_k\hat{H}}\ket{\phi_{\mathrm{HF}}}.
+\end{equation}
+The main characteristic of the Krylov basis is that it is Hamiltonian-guided: the Hamiltonian itself determines the directions added to the span. Its most important continuous parameter is the evolution time $t_k$ assigned to each basis state, while the Trotter order and number of Trotter steps are fixed globally. In principle, the time steps can be selected by grid search or by heuristic spacing rules for time-propagated basis states \cite{stair2020mrsqk,cohn2021qfd}. In this paper, the Krylov times are chosen as an equally spaced sequence $t_k = k\Delta t$, and the spacing $\Delta t$ is selected by grid search over candidate values. Candidate spacings that lead to a poorly conditioned overlap matrix are rejected, and the final choice is the spacing that gives the lowest projected ground-state energy among the remaining candidates. Krylov is therefore treated as a non-variational basis generator whose parameter-selection step is restricted to this explicit grid-search protocol rather than to a full continuous optimization loop.
+
+\subsubsection{UCCSD Basis}
+
+UCCSD constructs basis states from a chemically motivated excitation manifold built on top of the Hartree-Fock reference \cite{anand2022ucc}. Its general form is
+\begin{equation}
+\ket{\phi(\boldsymbol{\theta})}
+= e^{\hat{T}(\boldsymbol{\theta})-\hat{T}^{\dagger}(\boldsymbol{\theta})}
+\ket{\phi_{\mathrm{HF}}},
+\end{equation}
+where the cluster operator is truncated to single and double excitations,
+\begin{equation}
+\hat{T}(\boldsymbol{\theta})
+= \sum_{ia} \theta_i^a \hat{a}_a^\dagger \hat{a}_i
++ \frac{1}{4}\sum_{ijab}\theta_{ij}^{ab}
+\hat{a}_a^\dagger \hat{a}_b^\dagger \hat{a}_j \hat{a}_i .
+\end{equation}
+Here $i,j$ denote occupied spin orbitals and $a,b$ denote virtual spin orbitals. The main characteristic of UCCSD is that it is chemistry-guided rather than directly Hamiltonian-guided: the basis is restricted to the singles-and-doubles excitation structure expected to capture a large fraction of weak-to-moderate correlation effects.
+
+The main parameters of UCCSD are the excitation amplitudes $\theta_i^a$ and $\theta_{ij}^{ab}$ attached to the singles-and-doubles pool. In a standalone VQE implementation, these amplitudes would be determined by variational energy minimization. In the present non-variational comparison, they are instead assigned classically using warm-start rules such as MP2 \cite{moller1934mp2} or CCSD \cite{purvis1982ccsd}. Two UCCSD constructions are used in this work. The first is a one-shot full-versus-screened comparison, in which the full singles-and-doubles pool is evaluated directly against a screened or selected variant that retains only the larger-amplitude excitations. The second is the head-to-head $K$-dependent basis construction used later in the paper: starting from one MP2 or CCSD amplitude vector, the individual excitation generators are ranked by amplitude magnitude, and each added basis state is formed by applying one ranked generator at its fixed classical amplitude to the Hartree-Fock reference. This latter construction is not a conventional single-state UCCSD ansatz; rather, it is deliberately chosen to be closer in spirit to the GCIM idea of building a nonorthogonal basis from UCC excitation generators instead of optimizing one combined UCC circuit \cite{zheng2024gcim}. Thus, MP2 or CCSD provides the amplitudes, while the full-versus-screened or generator-ranked choice determines how those amplitudes are turned into benchmark basis states.
+
+\subsection{TrimCI-Based Reduced-Space Setup}
+
+The working space is reduced to a TrimCI-selected determinant space before the Krylov and UCCSD benchmark states are constructed. The reason is that the expensive steps of the unreduced workflow scale with the size of the full many-body space. In particular, an explicit qubit-state representation of a generic $n$-qubit Krylov or UCCSD state scales as $2^n$, while exact FCI in the fixed-electron sector scales combinatorially with the number of spin orbitals and electrons, through the determinant-space dimension $\binom{n}{N_e}$. In the naive full-space setting of this project, this keeps the routine end-to-end benchmark only in the small-system regime, practically through LiH in the main workflow, with H$_2$O / STO-3G still manageable only as a standalone reference check. Such a regime is too small to support a meaningful extrapolation in qubit count, so larger systems are needed. In practice, this means that qubit-scaling trends should be probed at least beyond the 20-qubit scale, and preferably into the 40--50 qubit range. By projecting first into a compact selected determinant space, the main linear-algebra cost is controlled instead by the number of kept determinants rather than the full Hilbert-space dimension.
+
+For a given molecular system, the first step is to run TrimCI in a shared RHF molecular-orbital basis and obtain an approximate ground state in determinant form,
+\begin{equation}
+\ket{\Psi_{\mathrm{TrimCI}}} = \sum_{\mu=1}^{M} c_{\mu} \ket{D_{\mu}}.
+\end{equation}
+In the present workflow, the practical TrimCI limiter is not an explicit energy-accuracy threshold but a determinant budget, controlled mainly by the parameter \texttt{ndets}, together with optional exploration controls such as \texttt{ndets\_explore} and \texttt{nexploration}. After the TrimCI run, the selected determinants are ranked by weight $|c_{\mu}|^2$.
+
+The working subspace for the benchmark is then defined by truncating this list to the top $N$ determinants,
+\begin{equation}
+\mathcal{S}_{N} = \mathrm{span}\{\ket{D_{1}}, \ket{D_{2}}, \ldots, \ket{D_{N}}\},
+\end{equation}
+with $N \le M$. This additional cutoff removes the low-weight tail of the TrimCI expansion and gives a compact determinant basis for the later Krylov and UCCSD constructions. The adequacy of this reduced determinant space is validated explicitly against exact FCI on the smaller systems in Appendix~\ref{subsec:trimci-validation}.
+
+All operators used in the benchmark are then represented directly in this $N$-determinant basis. The projected Hamiltonian is
+\begin{equation}
+H^{(N)}_{\mu \nu} = \bra{D_{\mu}} \hat{H} \ket{D_{\nu}},
+\end{equation}
+and the UCCSD excitation generators are represented in the same way,
+\begin{equation}
+G^{(a,N)}_{\mu \nu} = \bra{D_{\mu}} \left(\hat{\tau}_{a} - \hat{\tau}_{a}^{\dagger}\right) \ket{D_{\nu}}.
+\end{equation}
+Because the determinant basis itself is orthonormal, its intrinsic overlap matrix is the identity. The nontrivial overlap matrix appears only after the Krylov or UCCSD benchmark states are generated inside this reduced space.
+
+Given these projected operators, the benchmark basis states are constructed entirely within $\mathcal{S}_{N}$. Krylov states are generated from the projected Hamiltonian and the projected Hartree-Fock reference. UCCSD states are generated from the projected excitation generators, either as one-shot full-versus-screened UCCSD states or, in the later head-to-head comparison, as ranked single-generator states built from MP2 or CCSD amplitudes. If a comparison uses $K$ benchmark basis states, then $K$ Krylov or UCCSD states are constructed in this reduced determinant space before the final projected eigensolver is applied.
+
+\subsection{Benchmark Systems}
+
+The benchmark ladder is chosen to serve two purposes at once: direct small-system validation against exact FCI and larger-system scaling tests in the TrimCI-reduced workflow. All systems are treated in the STO-3G basis. The smaller systems H$_2$, H$_4$, and LiH are used to calibrate and validate the reduced-space construction against exact reference data, while N$_2$, C$_2$H$_4$, and C$_3$H$_8$ extend the study into a regime where full-space simulation would already be impractical in the end-to-end workflow but the TrimCI-based reduced-space approach remains tractable.
+
+\begin{table}[t]
+\caption{Benchmark systems used in the reduced-space study. All systems are treated in the STO-3G basis. The Hamiltonian Pauli-term column reports the number of terms in the mapped qubit Hamiltonian; the C$_3$H$_8$ entry is listed as a coarse extrapolated estimate because direct compilation of the full 46-qubit Hamiltonian was prohibitively slow in the present environment.}
+\label{tab:benchmark-systems}
+\begin{ruledtabular}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}ccccc@{}}
+System & Qubits & Electrons & \makecell[c]{Hamiltonian\\Pauli terms} & Role \\
+\midrule
+H$_2$ & 4 & 2 & 15 & \makecell[c]{Exact-FCI\\calibration} \\
+H$_4$ & 8 & 4 & 185 & \makecell[c]{Exact-FCI\\calibration} \\
+LiH & 12 & 4 & 631 & \makecell[c]{Exact-FCI\\calibration} \\
+N$_2$ & 20 & 14 & 3,327 & \makecell[c]{Reduced-space\\scaling} \\
+C$_2$H$_4$ & 28 & 16 & 8,919 & \makecell[c]{Reduced-space\\scaling} \\
+C$_3$H$_8$ & 46 & 26 & $\sim 3.8\times 10^4$ & \makecell[c]{Reduced-space\\scaling} \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{Projected Subspace Construction}
+
+All basis families start from the same Hartree-Fock reference state $\ket{\phi_{\mathrm{HF}}}$. Given a set of prepared basis states $\{\ket{\phi_i}\}_{i=0}^{K-1}$, the projected Hamiltonian and overlap matrices are formed as
+\begin{align}
+H_{ij} &= \bra{\phi_i}\hat{H}\ket{\phi_j}, \\
+S_{ij} &= \braket{\phi_i|\phi_j},
+\end{align}
+and the lowest generalized eigenvalue of
+\begin{equation}
+Hc = E_{\mathrm{sub}} Sc
+\end{equation}
+is used as the subspace energy estimate.
+
+\subsection{Generalized Eigensolver and Overlap Conditioning}
+
+The projected problem takes the generalized form rather than the ordinary form because the Krylov and UCCSD basis states are generally nonorthogonal. If the trial state in the projected subspace is written as
+\begin{equation}
+\ket{\psi_{\mathrm{sub}}} = \sum_{i=0}^{K-1} c_i \ket{\phi_i},
+\end{equation}
+then projecting the Schr\"odinger equation onto the same basis gives
+\begin{equation}
+\bra{\phi_i}\hat{H}\ket{\psi_{\mathrm{sub}}}
+= E_{\mathrm{sub}} \braket{\phi_i|\psi_{\mathrm{sub}}},
+\end{equation}
+which is exactly the matrix equation $Hc = E_{\mathrm{sub}}Sc$. Only in the special case of an orthonormal basis, where $S = I$, does this reduce to an ordinary eigenvalue problem.
+
+Because the nonorthogonal basis can contain nearly dependent directions, the overlap matrix may become ill-conditioned. To control this, $S$ is eigendecomposed as
+\begin{equation}
+S = U \, \mathrm{diag}(s_i) \, U^{\dagger},
+\end{equation}
+and directions with overlap eigenvalues below a threshold are discarded. In practice, the retained subspace is defined by a cutoff such as $s_i / s_{\max} \ge \varepsilon_S$, so the working basis is orthogonalized only on the numerically stable part of the span. The transformation
+\begin{equation}
+X = U_{\mathrm{keep}} \, \mathrm{diag}(s_i^{-1/2})
+\end{equation}
+then maps the retained nonorthogonal basis to an orthonormal basis, and the Hamiltonian is transformed as
+\begin{equation}
+\widetilde{H} = X^{\dagger} H X .
+\end{equation}
+The final projected estimate is obtained by solving the ordinary eigenvalue problem for $\widetilde{H}$ in this retained orthogonal subspace.
+
+In a hardware-oriented execution, the matrix elements of $H$ and $S$ would have to be obtained from Hadamard tests or related overlap-estimation techniques. In the present work, however, the purpose is to compare Krylov and UCCSD as basis generators rather than to benchmark matrix-element measurement protocols. The benchmark states are therefore represented analytically in the reduced TrimCI space, and the entries of $H$ and $S$ are formed directly from inner products and projected operators before solving the generalized eigenvalue problem. For larger reduced-space instances, iterative eigensolvers such as Davidson or LOBPCG are natural choices.
+
+\subsection{Comparison Protocol}
+
+The comparison in this work is intentionally non-variational for both basis families. Krylov and UCCSD are not judged by the result of a full parameter-optimization loop, but by the projected subspaces generated from their method-specific state-construction rules. This choice isolates the basis generator itself rather than the trainability of a variational ansatz.
+
+Under this protocol, both methods are evaluated for the same molecular Hamiltonian, in the same orbital basis, from the same Hartree-Fock reference state, inside the same TrimCI-defined reduced determinant space, and at the same target benchmark-basis size $K$. The projected ground-state estimate is always obtained from the same Rayleigh-Ritz procedure together with the same overlap-conditioning rule. Exact FCI is used as the validation reference on the smaller calibration systems, while the larger systems are compared within the same TrimCI-reduced workflow validated against those smaller exact benchmarks.
+
+The two families are allowed to keep their natural parameterization. For Krylov, the defining parameter is the time spacing $\Delta t$ that generates the equally spaced evolution times $t_k = k\Delta t$ used for the time-evolved basis states. In this paper, $\Delta t$ is selected by grid search. For UCCSD, the defining ingredients are the amplitudes attached to the singles-and-doubles excitation pool together with the choice of whether to keep the full pool or a screened subset. In the present non-variational setting, these amplitudes are supplied by classical chemistry information such as MP2 or CCSD rather than by a VQE optimization loop. The comparison therefore does not claim to identify the best standalone Krylov or the best standalone UCCSD-VQE result. Instead, it asks which family provides the more expressive projected subspace, within the same reduced-space representation, for the cost of preparing its states and operators.
+
+For the explicit $K$-by-$K$ head-to-head comparison reported later, the UCCSD side is organized as two separate ranked generator families, one built from MP2 amplitudes and one built from CCSD amplitudes. In each family, the individual singles-and-doubles generators are ranked by amplitude magnitude, and each added basis state is formed by applying one ranked generator at its fixed classical amplitude to the Hartree-Fock reference. Thus $K=1$ is the Hartree-Fock state itself, $K=2$ adds the top-ranked single-generator state, $K=3$ adds the second-ranked single-generator state, and so on. This makes the later UCCSD comparison closer in spirit to a GCIM-style nonorthogonal basis built from UCC generators than to a nested full-UCCSD truncation ladder. Curves may terminate before the target $K$ if the overlap-conditioning rule rejects additional nearly dependent states.
+
+\subsection{Assumptions and Parameters}
+
+Several assumptions are held fixed so that the ansatz comparison remains controlled.
+
+\begin{itemize}
+    \item The main benchmark is noiseless and focuses on basis quality and preparation cost, not hardware noise or full shot-noise modeling.
+    \item The primary fairness axis is basis size $K$; total trainable parameter count is tracked only as a secondary diagnostic.
+    \item Krylov and UCCSD use the same molecular Hamiltonian, the same Hartree-Fock reference state, the same projected-subspace objective, and the same validation reference.
+    \item The comparison is non-variational. Krylov basis states are specified by chosen evolution times, while UCCSD basis states are specified either as one-shot full-versus-screened ans\"atze or as ranked single-generator states built from MP2 or CCSD amplitudes.
+    \item Candidate states are rejected when the overlap matrix becomes numerically ill-conditioned. The benchmark uses a shared smallest-eigenvalue cutoff on $S$ to stabilize every projected solve.
+    \item Small molecules are used intentionally so that every reported trend can be checked against exact FCI data.
+\end{itemize}

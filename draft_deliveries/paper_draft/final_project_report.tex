@@ -1,0 +1,80 @@
+% ****** Start of file final_project_report.tex ******
+%
+%   This file follows the same REVTeX style as the user's original
+%   Phys765_final_project.zip template.
+%
+
+\documentclass[%
+ reprint,
+ %superscriptaddress,
+ %groupedaddress,
+ %unsortedaddress,
+ %runinaddress,
+ %frontmatterverbose,
+ %preprint,
+ %preprintnumbers,
+ %nofootinbib,
+ %nobibnotes,
+ %bibnotes,
+ amsmath,amssymb,
+ aps,
+ %pra,
+ %prb,
+ %rmp,
+ %prstab,
+ %prstper,
+ floatfix,
+]{revtex4-2}
+
+\usepackage{booktabs}
+\usepackage{makecell}
+\usepackage{braket}
+\usepackage{graphicx}
+\usepackage{dcolumn}
+\usepackage{bm}
+%\usepackage{hyperref}
+%\usepackage[mathlines]{lineno}
+%\linenumbers\relax
+
+\begin{document}
+
+\preprint{APS/123-QED}
+
+\title{Comparison of Krylov and UCCSD for Molecular Ground-State Approximation via Subspace Projection}
+
+\author{Jihyeon Park}
+\email{park687@wisc.edu}
+
+%\date{\today}
+
+\begin{abstract}
+This work compares Krylov and UCCSD as non-variational basis generators for
+molecular ground-state approximation in a projected-subspace framework. Rather
+than optimizing one ansatz, I compare how well each basis family generates a
+useful low-energy subspace. Across the benchmark set, Krylov reaches chemical accuracy with
+substantially fewer basis states than the non-variational UCC constructions,
+showing a stronger expressivity-per-basis trend as system size grows. At the
+same time, per-state resource estimates show that Krylov states are much more
+expensive to prepare because they rely on Trotterized Hamiltonian evolution,
+whereas selected UCCSD states remain shallow and inexpensive. The resulting
+full-stack conclusion is a clear tradeoff: Krylov is favored at the algorithmic
+layer by its smaller required subspace, while selected UCCSD is favored at the
+logical and hardware layers by its lower circuit cost.
+\end{abstract}
+
+\maketitle
+
+\input{Introduction}
+\input{Methods}
+\input{Results}
+\input{FullStackImpact}
+\input{Conclusion}
+\input{Limitations}
+\input{Reproducibility}
+\input{Appendix}
+
+\bibliography{references}
+
+\end{document}
+%
+% ****** End of file final_project_report.tex ******

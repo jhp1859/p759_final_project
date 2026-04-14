@@ -1,0 +1,29 @@
+\section{Repository and Reproducibility}
+
+This project is organized around a small set of benchmark notebooks and validation scripts. The main software stack uses PennyLane for quantum-state construction, PySCF for classical electronic-structure reference calculations, and TrimCI for reduced determinant-space selection.
+
+\textbf{Repository:} \url{https://github.com/jhp1859/p759_final_project}
+
+\textbf{Suggested reproduction steps:}
+\begin{enumerate}
+    \item Clone or download the repository.
+    \item Create the project environment and install the required packages for PennyLane, PySCF, and TrimCI.
+    \item Run \texttt{validate\_trimci\_subspace.py} to reproduce the TrimCI-versus-FCI reference-validation figure and CSV file.
+    \item Run the benchmark notebooks for H$_2$, H$_4$, and LiH to reproduce the small-system Krylov and UCCSD comparisons.
+    \item Run the larger-system reduced-space scripts to reproduce the warm-start and H$_2$O comparison figures used to motivate the scaling discussion.
+\end{enumerate}
+
+\textbf{Main entry points:}
+\begin{itemize}
+    \item \texttt{Fair\_Subspace\_Benchmark.ipynb}, \texttt{Fair\_Subspace\_Benchmark\_H4.ipynb}, and \texttt{Fair\_Subspace\_Benchmark\_LiH.ipynb}: end-to-end small-system benchmarks for Krylov and UCCSD.
+    \item \texttt{validate\_trimci\_subspace.py}: validation of the TrimCI reduced-space reference against exact FCI, together with the figure \texttt{TrimCI\_FCI\_Subspace\_Validation.pdf}.
+    \item \texttt{warmstart\_uccsd\_compare.py}: MP2- and CCSD-parameterized full and screened UCCSD warm-start comparisons.
+    \item \texttt{uccsd\_screening\_benchmark.py}: compact full-versus-screened UCCSD benchmark producing the LiH representative figure and the H$_2$/H$_4$/LiH summary table.
+    \item \texttt{krylov\_vs\_uccsd\_k\_comparison.py}: three-system head-to-head comparison of Krylov and nested MP2/CCSD-ranked UCCSD hierarchies as the basis size $K$ increases.
+    \item \texttt{h2o\_trimci\_krylov\_uccsd\_compare.py}: larger-system H$_2$O / STO-3G comparison in the TrimCI-reduced workflow.
+    \item \texttt{Resource\_Estimation\_Subspace.ipynb}: resource-estimation summaries for the benchmark ansatz families.
+\end{itemize}
+
+% Uncomment and fill in if you worked in a pair.
+% \section*{Contribution Statement}
+% [Briefly state who implemented what.]

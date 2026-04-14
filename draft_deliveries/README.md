@@ -12,3 +12,8 @@ Included files:
 - `krylov_vs_uccsd_k_comparison.py`
 - `h2o_trimci_krylov_uccsd_compare.py`
 - `Resource_Estimation_Subspace.ipynb`
+
+Additional folder:
+- `paper_draft/`
+  Contains the current report source files and compiled PDF, including the
+  corrected repository address in `Reproducibility.tex`.

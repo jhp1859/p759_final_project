@@ -1,0 +1,87 @@
+\section{Full-Stack Impact / Resource Implications}
+
+This section is required for the final project. State clearly how your result or tool affects a stack-level conclusion about utility-scale quantum computing under explicit assumptions.
+
+\subsection{Resource Estimation}
+
+Because the dependence on the number of basis states $K$ has already been studied in Sec.~IV, the resource comparison here focuses on the intrinsic cost of preparing one non-Hartree-Fock basis state. For Krylov, the reported values are based on first-order Trotterized time evolution with $n=2$ steps at the benchmark-selected $\Delta t^*$. For UCCSD-MP2 and UCCSD-CCSD, the reported values are averaged over the ranked single-generator basis states used in the head-to-head comparison. The combined table below summarizes total gate count, circuit depth, and two-qubit-gate count per basis state. The C$_3$H$_8$ Krylov row is an extrapolated proxy based on the exact smaller-system trend, while the remaining rows are taken directly from the current PennyLane resource estimates.
+
+\begin{table*}[t]
+    \centering
+    \scriptsize
+    \resizebox{\textwidth}{!}{\input{../P765_final_project/Resource_PerState_Combined_Table.tex}}
+    \caption{Per-basis-state resource summary for the current Krylov, UCCSD-MP2, and UCCSD-CCSD constructions. Each method block reports the average total native gate count, circuit depth, and two-qubit-gate count for one non-Hartree-Fock basis state. The C$_3$H$_8$ Krylov entry is an extrapolated proxy based on the exact smaller-system trend; all remaining entries are drawn directly from the current PennyLane resource estimates.}
+    \label{tab:resource-combined}
+\end{table*}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{../P765_final_project/Resource_PerState_DualAxis.pdf}
+    \caption{Per-basis-state resource scaling versus qubit count. Colors distinguish Krylov, UCCSD-MP2, and UCCSD-CCSD. On the left axis, solid-circle lines show the total native gate count and dotted-square lines show the two-qubit-gate count. On the right axis, dashed-triangle lines show the circuit depth. The C$_3$H$_8$ Krylov point is an extrapolated proxy, while the remaining values are taken directly from the current PennyLane resource estimates.}
+    \label{fig:resource-dual-axis}
+\end{figure}
+
+For LiH, the same resource picture is reflected in the comparison between full
+and amplitude-selected UCCSD. The selected construction preserves the one-shot
+warm-start energy to within about $0.1$~mHa while reducing the compiled circuit
+cost by more than an order of magnitude. In the MP2 branch, the selected
+construction lowers the gate count from $9344$ to $720$, and in the CCSD branch
+from $9344$ to $748$, while the energy gap changes only from $11.22$ to
+$11.31$~mHa and from $9.00$ to $9.07$~mHa, respectively. This makes selected
+UCCSD the clearly preferable chemistry-inspired basis when the objective is to
+reduce circuit cost without reintroducing a variational loop.
+
+The corresponding selected-Krylov truncation study is moved to
+Appendix~\ref{subsec:selected-krylov-appendix}, where it is kept as a supporting
+resource tradeoff rather than a main-text result.
+
+\subsection{Full-Stack Impact}
+
+The stack-level interpretation is more nuanced than a single "winner" between
+Krylov and UCCSD. At the quantum-algorithm layer, Krylov remains attractive
+because its stronger expressivity lowers the basis size required for chemical
+accuracy, as shown in Fig.~\ref{fig:k-chemical-accuracy}. Since the number of
+projected Hamiltonian and overlap elements grows roughly as $K^2$, this also
+reduces the shot burden of the subspace solve. Using the extracted
+$K_{\mathrm{chem}}$ values, the number of unique basis pairs
+$K_{\mathrm{chem}}(K_{\mathrm{chem}}+1)/2$ is only $15$ for Krylov on N$_2$ and
+$10$ for Krylov on both C$_2$H$_4$ and C$_3$H$_8$, compared with $990$ and
+$2016$ for the MP2-ranked UCC family and $1128$ and $3655$ for the
+CCSD-ranked UCC family on N$_2$ and C$_3$H$_8$, respectively. In this sense,
+Krylov is algorithmically more efficient: it reaches the same reduced-space
+accuracy with a much smaller projected subspace.
+
+At the logical-processor layer, however, Fig.~\ref{fig:resource-dual-axis}
+shows the opposite trend: each Krylov basis state is much deeper than the
+corresponding selected UCC basis state because it requires Trotterized
+Hamiltonian evolution. A simple depth-dominated logical-fidelity estimate can
+be obtained by requiring the total logical failure probability for preparing the
+$K_{\mathrm{chem}}$ basis states to remain below a budget $\eta$,
+\begin{equation}
+    p_L^{\mathrm{req}} \approx \frac{\eta}{K_{\mathrm{chem}} d_{\mathrm{state}}},
+\end{equation}
+where $d_{\mathrm{state}}$ is the per-state circuit depth. In
+this estimate, I set $\eta=10^{-2}$ as a rough one-pass budget for basis-state
+preparation. The estimate is optimistic because it ignores the repeated
+sampling needed to measure the projected $H$ and $S$ matrices, but it is still
+sufficient to expose the stack-level trend.
+
+This estimate shows that selected UCCSD is substantially easier at the logical
+and error-correction layers. On N$_2$, for example, the resulting requirement is
+about $3.0\times 10^{-7}$ for Krylov, compared with $1.1\times 10^{-5}$ for
+both MP2- and CCSD-ranked UCC. On C$_3$H$_8$, the corresponding values are
+$2.4\times 10^{-8}$, $7.9\times 10^{-6}$, and $5.9\times 10^{-6}$. Under any
+standard fault-tolerant architecture, a smaller target logical error rate
+translates into a larger code distance and therefore a heavier physical-processor
+overhead. In that sense, selected UCCSD is favored at the logical and physical
+layers even though it is less expressive at the algorithmic layer.
+
+The overall full-stack conclusion is therefore mixed rather than one-sided.
+Krylov suppresses the basis-size and shot-scaling burden, while selected UCCSD
+relaxes the required logical fidelity per circuit. Which family is closer to
+practical implementation depends on the dominant bottleneck: if projected-subspace
+size and sampling cost dominate, Krylov is more appealing; if logical depth and
+error-correction overhead dominate, selected UCCSD is more realistic. This
+benchmark therefore suggests that the ansatz choice is not just an algorithmic
+question, but a stack-wide co-design question linking quantum chemistry, logical
+resources, and hardware feasibility.

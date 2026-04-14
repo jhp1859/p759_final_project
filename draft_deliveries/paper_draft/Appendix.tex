@@ -1,0 +1,38 @@
+\appendix
+
+\section{Supplementary Validation and Resource Studies}
+
+\subsection{Validation of TrimCI as a Reduced Determinant Subspace}
+\label{subsec:trimci-validation}
+
+Before using the TrimCI reduced-space ground energy as the working reference for larger systems, it is necessary to check that the selected determinant span reproduces the exact FCI problem with controllable error on the smaller systems where FCI is still available. This validation is carried out by ranking determinants by their TrimCI weights, taking the top $M$ determinants, projecting the exact Hamiltonian into that determinant span, and comparing the resulting reduced-space reference energy against the exact FCI energy in the same orbital basis.
+
+The validation is strong for all three calibration systems shown in Fig.~\ref{fig:trimci-validation}. For H$_2$, the top two TrimCI determinants already recover the FCI energy to numerical precision. For the H$_4$ chain, chemical accuracy is reached with ten determinants, and the full selected TrimCI space of 20 determinants is exact to numerical precision. For LiH, chemical accuracy is reached with seven determinants, and the full selected TrimCI space of 46 determinants remains well below chemical accuracy, at roughly $0.03$ mHa above exact FCI. These results support the use of the reduced-space TrimCI ground energy as a reliable reference for the larger-system comparisons in this work.
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{../P765_final_project/TrimCI_FCI_Subspace_Validation.pdf}
+    \caption{Validation of the TrimCI reduced-space reference against exact FCI. The left axis shows the reduced-space reference energy error $E_{\mathrm{ref}}^{(M)}-E_{\mathrm{FCI}}$ as a function of the number of kept TrimCI determinants $M$, while the right axis shows the captured exact FCI weight in the same determinant span.}
+    \label{fig:trimci-validation}
+\end{figure}
+
+\subsection{Selected Krylov Resource Tradeoff}
+\label{subsec:selected-krylov-appendix}
+
+Figure~\ref{fig:selected-krylov} examines a simple selected-Krylov variant in
+which only the largest-magnitude Pauli terms of the qubit Hamiltonian are
+retained before Trotterized time evolution. For each retained-Pauli budget, the
+Krylov time spacing is scanned and the best stable projected result is reported
+at fixed $K=4$. The resulting basis states are still evaluated against the full
+TrimCI-reduced Hamiltonian, so the energy gap measures the expressivity loss
+caused by truncating the Krylov generator itself. For LiH, keeping about
+$20\%$ of the Pauli terms lowers the compiled per-state gate count from roughly
+$1260$ to $250$, but the projected-energy gap remains near $6$~mHa and does not
+approach chemical accuracy. In this representative case, Pauli truncation cuts
+state-preparation cost effectively, but it does not improve the overall
+expressivity-cost tradeoff relative to the full Krylov construction.
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{../P765_final_project/Selected_Krylov_LiH.pdf}
+    \caption{Selected-Krylov tradeoff for LiH in the TrimCI-reduced determinant space. The left axis shows the best projected-energy gap obtained at fixed $K=4$ after scanning the Krylov time spacing for each retained-Pauli budget, while the right axis shows the compiled Trotterized per-state gate count for the same truncated Hamiltonians. The final point corresponds to the full Krylov generator.}
+    \label{fig:selected-krylov}
+\end{figure}

@@ -1,0 +1,87 @@
+\section{Results and Validation}
+
+This section is organized around the method-specific choices that remain in the non-variational comparison. On the Krylov side, the main task is to select a useful time spacing by grid search. On the UCCSD side, the main task is to decide whether the full singles-and-doubles pool is necessary, or whether a screened subset of important excitations is already sufficient when amplitudes are assigned classically by MP2 or CCSD. After those two ingredients are fixed, the final subsection compares the resulting Krylov and UCCSD basis families directly as the benchmark basis size $K$ increases. The supporting validation that the TrimCI reduced-space reference reproduces exact FCI on the smaller calibration systems is provided in Appendix~\ref{subsec:trimci-validation}.
+
+\subsection{Krylov Time-Step Selection by Grid Search}
+
+Even though the benchmark avoids a full variational optimization loop, the Krylov basis still depends on a method-specific parameter, namely the time spacing $\Delta t$ used to define the equally spaced sequence $t_k = k\Delta t$. For this reason, the first stage of the results is a grid-search comparison over candidate $\Delta t$ values. For each molecule, candidate spacings are scanned, choices that lead to an ill-conditioned overlap matrix are discarded, and the remaining spacing with the lowest projected ground-state energy is retained. In the reduced-space workflow used here, the target Krylov size is capped at $K \le 4$; for H$_2$, the retained TrimCI space is only two-dimensional, so the largest nontrivial Krylov basis is $K=2$.
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{../P765_final_project/Krylov_Grid_Search_N2.pdf}
+    \caption{Representative Krylov grid search for N$_2$ in the TrimCI-reduced space. The plotted quantity is the projected energy gap $E_{\mathrm{Krylov}}-E_{\mathrm{ref}}$ as a function of the spacing $\Delta t$ at $K=4$. Red crosses mark candidate spacings rejected by the overlap cutoff, and the vertical dotted line marks the selected spacing.}
+    \label{fig:krylov-grid-search-n2}
+\end{figure}
+
+Figure~\ref{fig:krylov-grid-search-n2} shows the representative N$_2$ scan. The smallest spacings are rejected because the overlap matrix becomes too ill-conditioned, while a shallow minimum appears once the time-evolved states become sufficiently distinct. The best spacing is $\Delta t = 0.150$ for N$_2$, with a reduced-space Krylov gap of $0.698$ mHa relative to the TrimCI reference. The same grid-search protocol was applied to every benchmark system, and the resulting best spacings are summarized in the table below. A striking feature of the summary is that the optimal spacing is very stable across the ladder: $\Delta t = 0.150$ is selected for H$_4$, LiH, N$_2$, and C$_2$H$_4$, while the largest system C$_3$H$_8$ shifts only slightly to $\Delta t = 0.300$.
+
+\begin{center}
+    \small
+    \begin{tabular}{lcccc}
+        \toprule
+        System & Qubits & $N_{\mathrm{det}}$ & Best $\Delta t$ & Best gap (mHa) \\
+        \midrule
+        H$_2$ & 4 & 2 & 0.100 & -0.000 \\
+        H$_4$ & 8 & 20 & 0.150 & 0.244 \\
+        LiH & 12 & 69 & 0.150 & 0.631 \\
+        N$_2$ & 20 & 73 & 0.150 & 0.698 \\
+        C$_2$H$_4$ & 28 & 73 & 0.150 & 0.584 \\
+        C$_3$H$_8$ & 46 & 71 & 0.300 & 0.408 \\
+        \bottomrule
+    \end{tabular}
+\end{center}
+
+\subsection{Full and Screened UCCSD with MP2/CCSD Parameters}
+
+The second stage of the results examines whether the full UCCSD excitation pool is actually needed once amplitudes are fixed by classical chemistry information. To do this, I evaluate non-variational UCCSD states at MP2 and CCSD amplitudes, and then compare the full singles-and-doubles pool against a screened variant that keeps only operators with amplitude magnitude above the fixed threshold $10^{-2}$. In this work, the screened ansatz is the selected-UCC surrogate used for hardware-cost reduction. Adaptive UCC variants are not included, because they would reintroduce an iterative variational loop outside the intended scope of this non-variational comparison. The detailed screening study is reported on H$_2$, H$_4$, and LiH, where exact FCI remains available and full one-shot UCCSD evaluation is still routine in the present implementation.
+
+\begin{figure}[t]
+    \includegraphics[width=\columnwidth]{../P765_final_project/UCCSD_Screening_LiH_Combined.pdf}
+    \caption{Representative LiH comparison for full and screened one-shot no-opt UCCSD with MP2- and CCSD-parameterized amplitudes. Top: energy gaps relative to exact FCI, with the dashed line marking chemical accuracy. Bottom: retained excitation-operator counts for the same four variants.}
+    \label{fig:uccsd-screening-lih}
+\end{figure}
+
+Figure~\ref{fig:uccsd-screening-lih} shows the representative LiH tradeoff. In the full UCCSD pool, the MP2- and CCSD-parameterized states have FCI gaps of $11.224$ and $9.002$ mHa, respectively. After screening, those gaps change only slightly, to $11.308$ mHa for MP2 and $9.073$ mHa for CCSD, while the operator counts collapse from $92$ to $6$ and $8$. This is the central screening result of the subsection: at least on the calibration systems, most of the one-shot UCCSD benefit survives after discarding the small-amplitude tail of the excitation pool.
+
+The same pattern appears across the rest of the small-system set. For H$_2$, screening reduces the operator count from $3$ to $1$ with no visible change in the reported gap. For H$_4$, screening reduces the operator count from $26$ to $10$ while changing the gap by less than $0.03$ mHa. In all three systems, the CCSD-initialized ansatz is more accurate than the MP2-initialized ansatz, but the main hardware-relevant message is that the screened construction tracks the full construction very closely at substantially lower operator count.
+
+\begin{table}[t]
+    \centering
+    \small
+    \input{../P765_final_project/UCCSD_Screening_Summary_Table.tex}
+    \caption{Full and screened one-shot UCCSD variants on the small calibration systems. Reported gaps are relative to exact FCI, and `Ops' counts the retained excitation operators.}
+    \label{tab:uccsd-screening-summary}
+\end{table}
+
+For the later cross-family comparison, this subsection therefore motivates a nested UCCSD construction rather than a single fixed UCCSD state. In that later comparison, the excitation amplitudes are ranked by importance and used to build growing MP2-based and CCSD-based UCCSD hierarchies, so that the UCCSD side can also be studied as a function of basis size $K$.
+
+\subsection{Head-to-Head Krylov versus UCCSD as $K$ Increases}
+
+With the Krylov spacing fixed by grid search, the final stage is a direct comparison of how the basis families themselves improve as $K$ grows across the full six-system benchmark ladder. The figure therefore spans H$_2$, H$_4$, LiH, N$_2$, C$_2$H$_4$, and C$_3$H$_8$, so that the head-to-head comparison can be read from the smallest to the largest reduced-space instances used in this work. In every case, the projected energy is reported relative to the same TrimCI reduced-space reference energy. On the Krylov side, the plotted curve uses the best grid-searched spacing for the largest numerically stable Krylov target up to $K=20$. On the UCCSD side, I use two separate non-variational generator-ranked families, one ranked by MP2 amplitudes and one ranked by CCSD amplitudes. Each added UCCSD basis state is generated from a single ranked excitation operator acting on the Hartree-Fock reference at its fixed classical amplitude, so the ordered sequence is HF at $K=1$, then the top-ranked single-generator state, then the second-ranked single-generator state, and so on. In this sense, the head-to-head UCCSD comparison is closer to a GCIM-style nonorthogonal basis built from UCC generators than to a nested truncation of one full UCCSD circuit \cite{zheng2024gcim}.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{../P765_final_project/Krylov_vs_UCCSD_K_Comparison.pdf}
+    \caption{Head-to-head comparison of Krylov, MP2, and CCSD basis families as the benchmark basis size $K$ increases across the full benchmark ladder. The vertical axis shows the absolute projected-energy gap $|E_{\mathrm{sub}}-E_{\mathrm{ref}}|$ on a logarithmic scale, with values below $10^{-6}$ mHa clipped to that floor for display. The gray shaded region marks gaps below chemical accuracy ($1.6$ mHa). `MP2' and `CCSD' denote the generator-ranked UCC basis families built from fixed MP2 or CCSD amplitudes, respectively, where $K=1$ is Hartree-Fock and each additional basis state is generated by one more ranked single UCC excitation generator. The horizontal dotted lines use the same MP2 and CCSD colors and mark the corresponding full-pool one-shot UCCSD baselines in the same reduced determinant space. Curves terminate when the overlap-conditioning rule rejects further nearly dependent states or when the available reduced-space dimension is exhausted.}
+    \label{fig:krylov-vs-uccsd-k}
+\end{figure*}
+
+Figure~\ref{fig:krylov-vs-uccsd-k} shows that the three families behave quite differently once the comparison is phrased in terms of how quickly their projected span improves with $K$. Krylov is the only family that consistently drives the projected energy close to the reduced-space reference across the full ladder: it is exact for H$_2$ by $K=2$, reaches the numerical floor for H$_4$ by $K=12$, and then continues to converge to $10^{-4}$--$10^{-6}$ mHa levels on LiH, N$_2$, C$_2$H$_4$, and C$_3$H$_8$. The best Krylov spacings selected by the grid search are $\Delta t^*=0.10$ (H$_2$), $1.95$ (H$_4$), $1.70$ (LiH), $1.05$ (N$_2$), $1.20$ (C$_2$H$_4$), and $0.95$ (C$_3$H$_8$), while the largest numerically stable Krylov targets range from $K=2$ for H$_2$ up to the full $K=20$ target on N$_2$, C$_2$H$_4$, and C$_3$H$_8$.
+
+The UCC side shows a different pattern. On the smallest systems the generator-ranked MP2 and CCSD families can also approach the reference, but as the systems grow they converge much more slowly and often terminate early because of overlap conditioning. The CCSD-ranked family is usually the stronger of the two on the small calibration systems, reaching $0.287$ mHa on H$_4$ and $0.0209$ mHa on LiH, but it still remains at $20.09$ mHa on N$_2$, $21.16$ mHa on C$_2$H$_4$, and $33.47$ mHa on C$_3$H$_8$ at the largest sampled $K$. The MP2-ranked family stays above chemical accuracy as well on the larger systems, with final gaps of $19.82$ mHa on N$_2$, $11.92$ mHa on C$_2$H$_4$, and $21.98$ mHa on C$_3$H$_8$. The main conclusion from the six-system figure is therefore that Krylov gains much more from increasing $K$ than the amplitude-ranked single-generator UCC families once the problem moves beyond the small calibration regime. At the same time, the spread between the MP2 and CCSD curves shows that, in this GCIM-like UCC construction, the parent classical amplitude source and the conditioning of the resulting nonorthogonal basis are both essential parts of the method design.
+
+\subsection{Extrapolated Basis Size at Chemical Accuracy}
+
+The qubit-scaling trend can be summarized more compactly by extracting, from Fig.~\ref{fig:krylov-vs-uccsd-k}, the basis size required to reach chemical accuracy. For each system and basis family, I define $K_{\mathrm{chem}}$ as the first sampled $K$ for which $|E_{\mathrm{sub}}-E_{\mathrm{ref}}|\le 1.6$ mHa. If the sampled data do not reach that threshold, I fit the tail of the convergence curve to the log-linear form
+\begin{equation}
+\log_{10}|E_{\mathrm{sub}}-E_{\mathrm{ref}}| = a + bK,
+\end{equation}
+using the last up to five available points, and solve for the crossing with $1.6$ mHa to obtain an extrapolated estimate of $K_{\mathrm{chem}}$.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{../P765_final_project/K_Chemical_Accuracy_Extrapolation.pdf}
+    \caption{Estimated basis size required to reach chemical accuracy as a function of qubit count. Filled markers denote systems where the sampled data already reach the $1.6$ mHa target, while open markers denote extrapolated values obtained from a log-linear fit to the tail of the convergence curve.}
+    \label{fig:k-chemical-accuracy}
+\end{figure}
+
+Figure~\ref{fig:k-chemical-accuracy} makes the scaling separation between the basis families explicit. Krylov reaches chemical accuracy with only a handful of basis states across the full ladder: $K_{\mathrm{chem}}=2$ for H$_2$, $11$ for H$_4$, $2$ for LiH, $5$ for N$_2$, and $4$ for both C$_2$H$_4$ and C$_3$H$_8$. The generator-ranked UCC families behave very differently. On the small systems, the MP2 and CCSD constructions still reach chemical accuracy with moderate basis sizes, namely $(2,11,5)$ for MP2 and $(2,10,7)$ for CCSD on H$_2$, H$_4$, and LiH. Beyond that regime, however, chemical accuracy is not reached within the sampled $K$ window, and the extrapolated requirements rise into the tens of basis states. The extrapolated values are approximately $K_{\mathrm{chem}}\approx 44$, $34$, and $63$ for the MP2 family on N$_2$, C$_2$H$_4$, and C$_3$H$_8$, and $K_{\mathrm{chem}}\approx 47$, $41$, and $85$ for the corresponding CCSD family. This final scaling summary is consistent with the direct convergence plots: within the present reduced-space benchmark, Krylov maintains a much more favorable expressivity-per-basis trend than the non-variational UCC constructions as the system size increases.
