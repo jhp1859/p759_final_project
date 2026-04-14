@@ -17,3 +17,18 @@ Additional folder:
 - `paper_draft/`
   Contains the current report source files and compiled PDF, including the
   corrected repository address in `Reproducibility.tex`.
+
+Suggested reproduction steps:
+1. Clone or download the repository.
+2. Create the project environment and install the
+required packages for PennyLane, PySCF, and
+TrimCI.
+3. Run validate trimci subspace.py to reproduce
+the TrimCI-versus-FCI reference-validation figure
+and CSV file.
+4. Run the benchmark notebooks for H2, H4, and LiH
+to reproduce the small-system Krylov and UCCSD
+comparisons.
+5. Run the larger-system reduced-space scripts to re-
+produce the warm-start and H2O comparison fig-
+ures used to motivate the scaling discussion.
