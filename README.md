@@ -11,5 +11,3 @@ Start here:
 1. Open [`draft_deliveries/README.md`](draft_deliveries/README.md) for the file-by-file reproduction map.
 2. Read [`draft_deliveries/paper_draft/final_project_report.pdf`](draft_deliveries/paper_draft/final_project_report.pdf) for the final report.
 3. Use the notebooks and scripts in `draft_deliveries/` to reproduce the main figures and tables.
-
-The repository root is intentionally minimal. Older exploratory notebooks, check-in files, and intermediate generated outputs are not part of the public reproduction path.

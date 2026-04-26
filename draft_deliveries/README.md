@@ -32,5 +32,3 @@ This folder contains the report and the main files needed to reproduce the resul
 4. Run `uccsd_screening_benchmark.py` and `warmstart_uccsd_compare.py` for the full-versus-screened UCCSD results.
 5. Run `krylov_vs_uccsd_k_comparison.py` for the main six-system K-scaling comparison.
 6. Run `Resource_Estimation_Subspace.ipynb` for the resource estimates.
-
-The repository may contain local exploratory files in a working copy, but the public reproduction path is the set of files listed above.
