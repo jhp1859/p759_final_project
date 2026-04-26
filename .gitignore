@@ -1,28 +1,6 @@
-# Keep this repo focused on the shareable benchmark notebooks.
+# Keep the public repository focused on the final reproducibility bundle.
 *
 !.gitignore
-!Fair_Subspace_Benchmark.ipynb
-!Fair_Subspace_Benchmark_H4.ipynb
-!Fair_Subspace_Benchmark_LiH.ipynb
-!Resource_Estimation_Subspace.ipynb
-!Fair_Subspace_Benchmark_Description.pdf
-!Fair_Subspace_Benchmark_H4_Description.pdf
-!Fair_Subspace_Benchmark_LiH_Description.pdf
-!Resource_Estimation_Subspace_Description.pdf
-!Checkin_2_Jihyeon_Park.pdf
-!Fair_Subspace_Benchmark_H2_Gap_vs_K.pdf
-!Fair_Subspace_Benchmark_H2_Gap_vs_K.png
-!Fair_Subspace_Benchmark_H4_Gap_vs_K.pdf
-!Fair_Subspace_Benchmark_H4_Gap_vs_K.png
-!Fair_Subspace_Benchmark_LiH_Gap_vs_K.pdf
-!Fair_Subspace_Benchmark_LiH_Gap_vs_K.png
-!Resource_Estimation_H2.pdf
-!Resource_Estimation_H2.png
-!Resource_Estimation_H4.pdf
-!Resource_Estimation_H4.png
-!Resource_Estimation_LiH.pdf
-!Resource_Estimation_LiH.png
-!Checkin_2_Energy_Gap_Composite.pdf
-!Checkin_2_Energy_Gap_Composite.png
-!Checkin_2_Resource_Composite.pdf
-!Checkin_2_Resource_Composite.png
+!README.md
+!draft_deliveries/
+!draft_deliveries/**

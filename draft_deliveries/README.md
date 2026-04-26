@@ -1,34 +1,36 @@
-This folder collects the files explicitly listed in Section VI
-(`Repository and Reproducibility`) of the report draft.
+# Final Project Reproducibility Bundle
 
-Included files:
-- `Fair_Subspace_Benchmark.ipynb`
-- `Fair_Subspace_Benchmark_H4.ipynb`
-- `Fair_Subspace_Benchmark_LiH.ipynb`
-- `validate_trimci_subspace.py`
-- `TrimCI_FCI_Subspace_Validation.pdf`
-- `warmstart_uccsd_compare.py`
-- `uccsd_screening_benchmark.py`
-- `krylov_vs_uccsd_k_comparison.py`
-- `h2o_trimci_krylov_uccsd_compare.py`
-- `Resource_Estimation_Subspace.ipynb`
+This folder contains the report and the main files needed to reproduce the results referenced in the report's `Repository and Reproducibility` section.
 
-Additional folder:
-- `paper_draft/`
-  Contains the current report source files and compiled PDF, including the
-  corrected repository address in `Reproducibility.tex`.
+## Report
 
-Suggested reproduction steps:
-1. Clone or download the repository.
-2. Create the project environment and install the
-required packages for PennyLane, PySCF, and
-TrimCI.
-3. Run validate trimci subspace.py to reproduce
-the TrimCI-versus-FCI reference-validation figure
-and CSV file.
-4. Run the benchmark notebooks for H2, H4, and LiH
-to reproduce the small-system Krylov and UCCSD
-comparisons.
-5. Run the larger-system reduced-space scripts to re-
-produce the warm-start and H2O comparison fig-
-ures used to motivate the scaling discussion.
+- `paper_draft/final_project_report.pdf`  
+  Final compiled report.
+- `paper_draft/final_project_report.tex` and section files in `paper_draft/`  
+  LaTeX source for the report.
+
+## File Map
+
+| File | What it reproduces |
+| --- | --- |
+| `Fair_Subspace_Benchmark.ipynb` | Small-system H2 end-to-end Quantum Krylov versus UCCSD benchmark. |
+| `Fair_Subspace_Benchmark_H4.ipynb` | Small-system H4 end-to-end Quantum Krylov versus UCCSD benchmark. |
+| `Fair_Subspace_Benchmark_LiH.ipynb` | Small-system LiH end-to-end Quantum Krylov versus UCCSD benchmark. |
+| `validate_trimci_subspace.py` | TrimCI reduced-space validation against exact FCI. Produces the validation data used for `TrimCI_FCI_Subspace_Validation.pdf`. |
+| `TrimCI_FCI_Subspace_Validation.pdf` | Pre-generated TrimCI-versus-FCI validation figure. |
+| `warmstart_uccsd_compare.py` | MP2- and CCSD-parameterized one-shot UCCSD comparisons before and after screening. |
+| `uccsd_screening_benchmark.py` | Compact full-versus-screened UCCSD benchmark for H2, H4, and LiH. Produces the LiH screening figure and the small-system screening summary table used in the report. |
+| `krylov_vs_uccsd_k_comparison.py` | Main six-system head-to-head comparison of Quantum Krylov and MP2/CCSD-ranked UCCSD as basis size K increases. Produces the main K-comparison data and figures. |
+| `h2o_trimci_krylov_uccsd_compare.py` | Auxiliary larger-system reduced-space comparison used as an additional workflow check. |
+| `Resource_Estimation_Subspace.ipynb` | Resource-estimation notebook for the benchmark ansatz families. Produces the resource summaries used in the full-stack section. |
+
+## Suggested Order
+
+1. Read `paper_draft/final_project_report.pdf`.
+2. Run `validate_trimci_subspace.py` to check that the TrimCI reduced space agrees with exact FCI on small systems.
+3. Run the three `Fair_Subspace_Benchmark*.ipynb` notebooks for the small-system comparisons.
+4. Run `uccsd_screening_benchmark.py` and `warmstart_uccsd_compare.py` for the full-versus-screened UCCSD results.
+5. Run `krylov_vs_uccsd_k_comparison.py` for the main six-system K-scaling comparison.
+6. Run `Resource_Estimation_Subspace.ipynb` for the resource estimates.
+
+The repository may contain local exploratory files in a working copy, but the public reproduction path is the set of files listed above.

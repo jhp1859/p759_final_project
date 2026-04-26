@@ -1,26 +1,26 @@
 \section{Conclusion}
 
-This work compared Krylov and UCCSD as non-variational basis generators for
+This work compared Quantum Krylov and UCCSD as non-variational basis generators for
 molecular ground-state approximation in a projected-subspace framework. By
 placing both families in the same reduced determinant-space workflow, the
 benchmark focused on basis quality rather than on a variational optimization
-loop. The main numerical result is that Krylov reaches chemical accuracy with a
+loop. The main numerical result is that Quantum Krylov reaches chemical accuracy with a
 substantially smaller basis size than the non-variational UCC constructions
 across the benchmark ladder, indicating a stronger expressivity-per-basis trend
 as the system size grows.
 
 At the same time, the resource analysis shows that this algorithmic advantage
-does not translate into a simple hardware advantage. Krylov basis states are
+does not translate into a simple hardware advantage. Quantum Krylov basis states are
 much more expensive to prepare because they require Trotterized Hamiltonian
 evolution, whereas selected UCCSD states remain shallow and comparatively
-cheap. The resulting picture is therefore a genuine tradeoff: Krylov is favored
+cheap. The resulting picture is therefore a genuine tradeoff: Quantum Krylov is favored
 when the dominant concern is projected-subspace size and sampling burden, while
 selected UCCSD is favored when the dominant concern is logical depth and
 hardware cost per basis state.
 
 Taken together, these results suggest that basis design for quantum chemistry
 should be evaluated at more than one layer of the stack. In the present
-benchmark, Krylov is the more powerful basis family at the algorithmic level,
+benchmark, Quantum Krylov is the more powerful basis family at the algorithmic level,
 but selected UCCSD remains attractive from the perspective of implementation.
 This makes the choice between them not just a question of accuracy, but a
 co-design problem linking ansatz expressivity, logical resources, and hardware

@@ -1,11 +1,15 @@
-# p765_final_project
+# P765 Final Project
 
-I plan to study different effective quantum state constructions for ground-state energy estimation, such as Krylov states, UCCSD, and symmetry-adapted references. Using a common measurement framework to build overlap and Hamiltonian matrices, I will compare their performance(sampling cost and gate depth) by analyzing ground-state energy errors across molecular systems.
+This repository is organized for reproducing the final report:
 
-## Suggested reproduction steps
+**Comparison of Quantum Krylov and UCCSD for Molecular Ground-State Approximation via Subspace Projection**
 
-1. Clone or download the repository.
-2. Create the project environment and install the required packages for PennyLane, PySCF, and TrimCI.
-3. Run `validate_trimci_subspace.py` to reproduce the TrimCI-versus-FCI reference-validation figure and CSV file.
-4. Run the benchmark notebooks for `H2`, `H4`, and `LiH` to reproduce the small-system Krylov and UCCSD comparisons.
-5. Run the larger-system reduced-space scripts to reproduce the warm-start and `H2O` comparison figures used to motivate the scaling discussion.
+All files needed by a first-time reader are collected in [`draft_deliveries/`](draft_deliveries/). That folder contains the report PDF, report source, benchmark notebooks, and the scripts named in the report's reproducibility section.
+
+Start here:
+
+1. Open [`draft_deliveries/README.md`](draft_deliveries/README.md) for the file-by-file reproduction map.
+2. Read [`draft_deliveries/paper_draft/final_project_report.pdf`](draft_deliveries/paper_draft/final_project_report.pdf) for the final report.
+3. Use the notebooks and scripts in `draft_deliveries/` to reproduce the main figures and tables.
+
+The repository root is intentionally minimal. Older exploratory notebooks, check-in files, and intermediate generated outputs are not part of the public reproduction path.
